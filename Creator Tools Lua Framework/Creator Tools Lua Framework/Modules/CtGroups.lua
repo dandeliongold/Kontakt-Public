@@ -20,6 +20,7 @@
 --
 
 local CtGroups = {}
+local ctUtil = require("Modules.CtUtil")
 
 --- Test Function.
 -- Takes no arguments, prints to console when called.
@@ -263,6 +264,95 @@ function CtGroups.group_params(group,volume,tune,pan,name)
 	if g.name ~= nil then
 		g.name = name
 	end
+	return true
+end
+
+--- Re-order groups according to custom mic order.
+-- @treturn bool
+function CtGroups.re_order_groups_for_mics()
+	local KICK_BAT = "BDBat"
+	local KICK_IN = "BDIn"
+	local KICK_OUT = "BDOut"
+	local SNARE_TOP = "SDTop"
+	local SNARE_BOTTOM = "SDBot"
+	local HI_HAT = "HHMic"
+	local HIGH_TOM = "HTMic"
+	local MID_TOM = "MTMic"
+	local LOW_TOM = "LTMic"
+	local OH_SIDE = "OHBak"
+	local OH_FRONT = "OHFnt"
+	local OH_TOP = "OHTop"
+	local CENTER_1 = "CTCar"
+	local CENTER_2 = "CTOmn"
+	local ROOM = "Room"
+
+	-- index will automatically start at 1
+	local micGroupNames = {
+		KICK_BAT,
+		KICK_IN,
+		KICK_OUT,
+		SNARE_TOP,
+		SNARE_BOTTOM,
+		HI_HAT,
+		HIGH_TOM,
+		MID_TOM,
+		LOW_TOM,
+		OH_SIDE,
+		OH_FRONT,
+		OH_TOP,
+		CENTER_1,
+		CENTER_2,
+		ROOM
+	}
+
+	local micGroups = {}
+
+	local micGroupNameKeys = {}
+	local groupsPerMic = nil
+
+	for k,v in pairs(micGroupNames) do
+		micGroups[v] = {}
+		-- Create a table of keys so we can get groups in order.
+		table.insert(micGroupNameKeys, k)
+		local groupCount = 0
+		for n=0, #instrument.groups-1 do
+			local groupName = instrument.groups[n].name
+			if ctUtil.string_starts(groupName, v) then
+				-- Add group number to list
+				table.insert(micGroups[v], n)
+				-- Count total number of groups per mic.
+				groupCount = groupCount + 1
+			end
+		end
+		if groupsPerMic == nil then
+			groupsPerMic = groupCount
+		elseif groupsPerMic ~= groupCount then
+			-- Check to make sure we have the same number of groups per mic.
+			print("ERROR: groupCount for " .. k .. " doesn't match other counts")
+		end
+	end
+
+	print("Number of groups per mic: " .. groupsPerMic)
+
+	table.sort(micGroupNameKeys)
+	local newGroupIndex = 0
+	local originalGroups = instrument.groups
+	for _, k in pairs(micGroupNameKeys) do
+		print("Copying groups for " .. micGroupNames[k])
+		-- TODO: are these guaranteed to be in original insertion order?
+		for micName, groupIndex in pairs(micGroups[micGroupNames[k]]) do
+			instrument.groups:add(instrument.groups[groupIndex])
+			newGroupIndex = newGroupIndex + 1
+		end
+	end
+
+	print("Total groups added: " .. newGroupIndex)
+
+	for n=0, newGroupIndex-1 do
+		instrument.groups:remove(0)
+	end
+
+	print("Removed old groups.")
 	return true
 end
 

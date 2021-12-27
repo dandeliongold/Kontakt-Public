@@ -64,6 +64,7 @@ false
 sox
 /opt/homebrew/bin/flac
 flac
-BD_CL
+BD
+true
 true
 true

@@ -8,6 +8,7 @@ local ctFile = require("Modules.CtFile")
 local ctMap = require("Modules.CtMap")
 local ctUtil = require("Modules.CtUtil")
 local ctInstrument = require("Modules.CtInstrument")
+local ctGroup = require("Modules.CtGroups")
 
 local parameters_table = {}
 for line in io.lines(root_path.."/Variables/instrument_parameters.txt") do
@@ -80,6 +81,7 @@ local sample_set_file_names_check = ctUtil.tobool(parameters_table[62])
 local instrument_name_prefix = parameters_table[67]
 local reverse_token_order = ctUtil.tobool(parameters_table[68])
 local map_velocity_range_names = ctUtil.tobool(parameters_table[69])
+local re_order_groups = ctUtil.tobool(parameters_table[70])
 
 local free_flag_bool_1 = false
 local free_flag_knob_1 = -1
@@ -153,6 +155,11 @@ if perform_mapping then
 		ctMap.mapping_report(error_flag)
 		print(dash_sep)
 	end
+end
+
+if re_order_groups then
+	print("Re-ordering groups according to custom mic order.")
+	ctGroup.re_order_groups_for_mics()
 end
 
 if ksp_script_set then

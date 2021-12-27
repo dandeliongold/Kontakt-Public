@@ -586,6 +586,8 @@ function CtUtil.tokens_to_table(sample_paths_table,token_separator,reverse_token
 	for index, file in pairs(sample_paths_table) do
 	    -- Initialize a table for the tokens of each sample
 	   local temp_tokens = {}
+	   local is_closed_sample = false
+	   local is_open_sample = false
 	    -- Get the clean file name (without path and extension) to parse.
 	    local file_name = filesystem.filename(file):gsub(filesystem.extension(file),"")
 	    if verbose_mode then
@@ -594,6 +596,8 @@ function CtUtil.tokens_to_table(sample_paths_table,token_separator,reverse_token
 	    end
 		-- Prepare a table with the tokens from each sample. 
 		for token in file_name:gmatch(token_separator) do
+			if string.upper(token) == "CL" then is_closed_sample = true end
+			if string.upper(token) == "OP" then is_open_sample = true end
 			table.insert(temp_tokens, token)
 		end 
 		-- Print the token list of each sample.
@@ -607,11 +611,13 @@ function CtUtil.tokens_to_table(sample_paths_table,token_separator,reverse_token
 			    value = temp_tokens[i]
 			    table.insert(reversed_tokens, value)
 			end
-			table.insert(sample_tokens_table,reversed_tokens)
-		else
-			-- Insert each sample's token list into the main tokens list.
-			table.insert(sample_tokens_table,temp_tokens)
+			temp_tokens = reversed_tokens
 		end
+		-- Add indicators for open or closed variations
+		table.insert(temp_tokens, is_closed_sample)
+		table.insert(temp_tokens, is_open_sample)
+		-- Insert each sample's token list into the main tokens list.
+		table.insert(sample_tokens_table,temp_tokens)
 	end
 	return sample_tokens_table
 end

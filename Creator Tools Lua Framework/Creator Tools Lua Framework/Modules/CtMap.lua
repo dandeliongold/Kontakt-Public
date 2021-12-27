@@ -107,7 +107,7 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	if verbose_mode == nil then verbose_mode = true end
 	if reset_groups == nil then reset_groups = -1 end
 
-	if verbose_mode then print("Group mode: "..playback_mode) end
+	if verbose_mode then print("Group mode parameter set to: "..playback_mode) end
 	
 	-- Set the playback mode.
 	if playback_mode == "dfd" then playback_mode = PlaybackMode.DirectFromDisk 
@@ -122,7 +122,7 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 		elseif playback_mode == "mp60" then playback_mode = PlaybackMode.MP60Machine
 	end
 
-	if verbose_mode then print("Group mode: "..playback_mode) end
+	if verbose_mode then print("Group mode enum value in Kontakt: "..playback_mode) end
 
 	-- Checks that a proposed zone value is in the right range.
 	local function check_zone_value(token_value,token_type)
@@ -196,15 +196,27 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 		
 	    if verbose_mode then print(dash_sep) end
 
+	    local num_tokens = ctUtil.table_size(sample_tokens_table[index])
+	    local is_closed_sample = sample_tokens_table[index][num_tokens-1]
+	    local is_open_sample = sample_tokens_table[index][num_tokens]
+
 		-- Set the proposed group name based on the tokens.
 	    -- If there is a sample name token, add that to the proposed name.
 	    if sample_name_location > 0 then
 	        if sample_tokens_table[index][sample_name_location] ~= nil then
 	            print("Sample name found: "..sample_tokens_table[index][sample_name_location])
 	            curent_group_name = sample_tokens_table[index][sample_name_location]
-	            -- Remove hyphens from group name to match existing convention
+	            -- Remove hyphens and spaces from group name to match existing convention
 	            -- TODO: is there a way to avoid doing this?
 	            curent_group_name = string.gsub(curent_group_name, "%-", "")
+	            curent_group_name = string.gsub(curent_group_name, " ", "")
+	            if is_closed_sample == true then
+	            	curent_group_name = string.gsub(curent_group_name, "00", "_CL_00")
+	            	print("Identified as CLOSED sample, group name is " ..curent_group_name)
+	            elseif is_open_sample == true then
+	            	curent_group_name = string.gsub(curent_group_name, "00", "_OP_00")
+	            	print("Identified as OPEN sample, group name is " ..curent_group_name)
+	            end
 	        else
 	            if verbose_mode then print("ERROR: Sample name token set but not found") end
 	            error_flag = true
