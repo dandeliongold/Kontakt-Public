@@ -22,6 +22,7 @@
 local CtUtil = {}
 
 local unpack = table.unpack or unpack	-- Lua 5.1 or 5.2 table unpacker
+local verbose_mode = true
  
 --- Test Function.
 -- Takes no arguments, prints to console when called.
@@ -362,8 +363,9 @@ end
 -- Optionally it is also possible to scan all the sub-directories .
 -- @tparam string path the path to start looking in.
 -- @tparam string file extention to look for.
+-- @tparam string optional prefix to check for before including in table
 -- @treturn table returns a table with paths to all samples found.
-function CtUtil.paths_to_table(path,extension)
+function CtUtil.paths_to_table(path,extension,prefix)
 	local sample_paths = {}
 	local i = 1
 	if verbose_mode then print("----------Searching Path----------") end
@@ -374,11 +376,16 @@ function CtUtil.paths_to_table(path,extension)
 	    	-- Then we add only audio files to our table.
 	      	if filesystem.extension(p) == extension then
 	        	-- print the sample path.
+	        	if prefix ~= nil and prefix ~= "" then
+	        		-- skip file if it doesn't start with prefix
+	        		if CtUtil.string_starts(filesystem.filename(p),prefix) == false then goto continue end
+	        	end
 	        	if verbose_mode then print("Sample path found: "..p) end
 	        	sample_paths[i] = p
 	        	i = i+1
 	      	end
 	    end
+	    ::continue::
 	end
 	return sample_paths
 end
@@ -572,16 +579,17 @@ end
 --- Parse each file and make a tokens list.
 -- @tparam string sample_paths_table the table of paths to iterate over.
 -- @tparam string token_separator the string separating each token.
+-- @tparam bool reverse_token_order whether to reverse order tokens
 -- @treturn table returns a table with the tokens found in the file name.
-function CtUtil.tokens_to_table(sample_paths_table,token_separator)
+function CtUtil.tokens_to_table(sample_paths_table,token_separator,reverse_token_order)
 	local sample_tokens_table = {}
 	for index, file in pairs(sample_paths_table) do
 	    -- Initialize a table for the tokens of each sample
 	   local temp_tokens = {}
 	    -- Get the clean file name (without path and extension) to parse.
 	    local file_name = filesystem.filename(file):gsub(filesystem.extension(file),"")
-	    if verbose_mode then 
-	    	print(dash_sep) 
+	    if verbose_mode then
+	    	CtUtil.dash_sep_print(true)
 	    	print("File to parse: "..file_name) 
 	    end
 		-- Prepare a table with the tokens from each sample. 
@@ -593,8 +601,17 @@ function CtUtil.tokens_to_table(sample_paths_table,token_separator)
 			print("Tokens found: ") 
 			CtUtil.print_r(temp_tokens) 
 		end	
-		-- Insert each sample's token list into the main tokens list.
-		table.insert(sample_tokens_table,temp_tokens)
+		if reverse_token_order then
+			local reversed_tokens = {}
+			for i = #temp_tokens, 1, -1 do
+			    value = temp_tokens[i]
+			    table.insert(reversed_tokens, value)
+			end
+			table.insert(sample_tokens_table,reversed_tokens)
+		else
+			-- Insert each sample's token list into the main tokens list.
+			table.insert(sample_tokens_table,temp_tokens)
+		end
 	end
 	return sample_tokens_table
 end

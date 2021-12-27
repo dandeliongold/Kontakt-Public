@@ -101,10 +101,13 @@ end
 -- @tparam bool verbose_mode when true, prints the results of the mapping operation to console.
 -- @tparam bool fix_tune When true MIR is used to fine tune each sample to the nearest note.
 -- @tparam bool reset_groups If this value is greater than -1, the created groups will be a deep copy of this value's group slot instead of empty groups.
+-- @tparam bool map_velocity_range_names If true, then names will be mapped to values
 -- @treturn bool
-function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mode,sample_name_location,signal_name_location,articulation_location,round_robin_location,root_detect,root_location,key_confine,low_key_location,high_key_location,vel_confine,low_vel_location,high_vel_location,set_loop,loop_xfade,default_root_value,default_low_key_value,default_high_key_value,default_low_vel_value,default_high_vel_value,verbose_mode,fix_tune,reset_groups)
+function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mode,sample_name_location,signal_name_location,articulation_location,round_robin_location,root_detect,root_location,key_confine,low_key_location,high_key_location,vel_confine,low_vel_location,high_vel_location,set_loop,loop_xfade,default_root_value,default_low_key_value,default_high_key_value,default_low_vel_value,default_high_vel_value,verbose_mode,fix_tune,reset_groups,map_velocity_range_names)
 	if verbose_mode == nil then verbose_mode = true end
 	if reset_groups == nil then reset_groups = -1 end
+
+	if verbose_mode then print("Group mode: "..playback_mode) end
 	
 	-- Set the playback mode.
 	if playback_mode == "dfd" then playback_mode = PlaybackMode.DirectFromDisk 
@@ -151,6 +154,27 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	"C8","C#8","D8","D#8","E8","F8","F#8","G8","G#8"
 	}
 
+	-- Table with velocity names mapped to low and high values
+	local velocities = {
+		["Soft"] = {
+			["low"] = 1,
+			["high"] = 31
+		},
+		["Med"] = {
+			["low"] = 32,
+			["high"] = 63
+		},
+		["Hard"] = {
+			["low"] = 64,
+			["high"] = 95
+		},
+		["Accent"] = {
+			["low"] = 96,
+			["high"] = 127
+		}
+	}
+
+
 	-- Create the mapping.
 
 	-- Initialize a table to fill with the group names.
@@ -161,6 +185,8 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 
 	-- Variable for the token values
 	local token_value
+
+	if verbose_mode then print("Number of sample paths found: " .. ctUtil.table_size(sample_paths_table)) end
 
 	-- Loop through all the sample paths and map each sample according to the tokens.
 	for index, file in next,sample_paths_table do
@@ -176,6 +202,9 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	        if sample_tokens_table[index][sample_name_location] ~= nil then
 	            print("Sample name found: "..sample_tokens_table[index][sample_name_location])
 	            curent_group_name = sample_tokens_table[index][sample_name_location]
+	            -- Remove hyphens from group name to match existing convention
+	            -- TODO: is there a way to avoid doing this?
+	            curent_group_name = string.gsub(curent_group_name, "%-", "")
 	        else
 	            if verbose_mode then print("ERROR: Sample name token set but not found") end
 	            error_flag = true
@@ -268,12 +297,13 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	    		z.rootKey = default_root_value
 	        elseif root_location > 0 then
 	        	if sample_tokens_table[index][root_location] then
-		            if ctUtil.table_value_index(note_names,sample_tokens_table[index][root_location]) == nil then
+	        		local uppercase_note_name = string.upper(sample_tokens_table[index][root_location])
+		            if ctUtil.table_value_index(note_names,uppercase_note_name) == nil then
 		                -- Remove non numerical characters from the token.
 		                token_value = tonumber(sample_tokens_table[index][root_location]:match('%d[%d.,]*'))
 		            else
 		                -- Check for the index value of the note string
-		                token_value = tonumber(ctUtil.table_value_index(note_names,sample_tokens_table[index][root_location]))-1
+		                token_value = tonumber(ctUtil.table_value_index(note_names,uppercase_note_name))-1
 		            end
 		        else
 		        	token_value = -1
@@ -293,12 +323,13 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	        -- Set the zone low key.
 	        elseif low_key_location > 0 then
 				if sample_tokens_table[index][low_key_location] then
-		            if ctUtil.table_value_index(note_names,sample_tokens_table[index][low_key_location]) == nil then
+					local uppercase_note_name = string.upper(sample_tokens_table[index][low_key_location])
+		            if ctUtil.table_value_index(note_names,uppercase_note_name) == nil then
 		                -- Remove non numerical characters from the token.
 		            	token_value = tonumber(sample_tokens_table[index][low_key_location]:match('%d[%d.,]*'))
 		            else
 		                -- Check for the index value of the note string
-		                token_value = tonumber(ctUtil.table_value_index(note_names,sample_tokens_table[index][low_key_location]))-1
+		                token_value = tonumber(ctUtil.table_value_index(note_names,uppercase_note_name))-1
 		            end
 				else
 					token_value = -1
@@ -311,12 +342,13 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	    		z.keyRange.high = default_high_key_value
 	        elseif high_key_location > 0 then
 				if sample_tokens_table[index][high_key_location] then
-		            if ctUtil.table_value_index(note_names,sample_tokens_table[index][high_key_location]) == nil then
+					local uppercase_note_name = string.upper(sample_tokens_table[index][high_key_location])
+		            if ctUtil.table_value_index(note_names,uppercase_note_name) == nil then
 		                -- Remove non numerical characters from the token.
 		            	token_value = tonumber(sample_tokens_table[index][high_key_location]:match('%d[%d.,]*'))
 		            else
 		                -- Check for the index value of the note string
-		                token_value = tonumber(ctUtil.table_value_index(note_names,sample_tokens_table[index][high_key_location]))-1
+		                token_value = tonumber(ctUtil.table_value_index(note_names,uppercase_note_name))-1
 		            end
 				else
 					token_value = -1
@@ -335,8 +367,13 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	    		z.velocityRange.low = default_low_vel_value
 	        elseif low_vel_location > 0 then
 				if sample_tokens_table[index][low_vel_location] then
-		            -- Remove non numerical characters from the token.
-		        	token_value = tonumber(sample_tokens_table[index][low_vel_location]:match('%d[%d.,]*'))
+					if map_velocity_range_names then
+						-- Map from token to number value
+						token_value = velocities[sample_tokens_table[index][low_vel_location]]['low']
+					else
+						-- Remove non numerical characters from the token.
+		        		token_value = tonumber(sample_tokens_table[index][low_vel_location]:match('%d[%d.,]*'))
+					end
 				else
 					token_value = -1
 				end		 
@@ -349,8 +386,13 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	    		z.velocityRange.high = default_high_vel_value
 	        elseif high_vel_location > 0 then
 				if sample_tokens_table[index][high_vel_location] then
-		            -- Remove non numerical characters from the token.
-		        	token_value = tonumber(sample_tokens_table[index][high_vel_location]:match('%d[%d.,]*'))
+		            if map_velocity_range_names then
+						-- Map from token to number value
+						token_value = velocities[sample_tokens_table[index][high_vel_location]]['high']
+					else
+						-- Remove non numerical characters from the token.
+		        		token_value = tonumber(sample_tokens_table[index][high_vel_location]:match('%d[%d.,]*'))
+					end
 				else
 					token_value = -1
 				end		 
