@@ -187,6 +187,19 @@ function CtGroups.group_name_search(search_name,start_group,until_group,contains
 	return groups_found
 end
 
+--- Search for a group name.
+-- Return the index of the first group that matches that name.
+-- @tparam string group_name the group name to look for.
+-- @treturn int
+function CtGroups.find_group_index(group_name)
+	for n=0, #instrument.groups-1 do
+		if instrument.groups[n].name == group_name then
+		   	return n
+		end
+	end
+	return -1
+end
+
 --- Remove groups within a range of groups.
 -- @tparam int start_group the index of the first group to remove. Defaults to 0.
 -- @tparam int until_group the index of the last group to remove. Defaults to start_group.
@@ -336,7 +349,6 @@ function CtGroups.re_order_groups_for_mics()
 
 	table.sort(micGroupNameKeys)
 	local newGroupIndex = 0
-	local originalGroups = instrument.groups
 	for _, k in pairs(micGroupNameKeys) do
 		print("Copying groups for " .. micGroupNames[k])
 		-- TODO: are these guaranteed to be in original insertion order?

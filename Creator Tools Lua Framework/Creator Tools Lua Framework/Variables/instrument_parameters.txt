@@ -1,7 +1,7 @@
 F:\_sampling\JohnnyAndrewKit\Johnny_Kit_Re-rendered
 true
 true
--1
+0
 dfd
 false
 3
@@ -64,7 +64,8 @@ false
 sox
 /opt/homebrew/bin/flac
 flac
-BD
+HH
+true
 true
 true
 true

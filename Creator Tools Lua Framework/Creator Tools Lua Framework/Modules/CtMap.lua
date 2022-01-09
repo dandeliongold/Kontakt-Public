@@ -23,6 +23,7 @@ local root_path = filesystem.parentPath(scriptPath)
 package.path = root_path .. "/?.lua;" .. package.path
 
 local ctUtil = require("Modules.CtUtil")
+local ctGroups = require("Modules.CtGroups")
 
 -- Just a separator for printing to the console.
 local dash_sep = "------------------------------------------------------------"
@@ -102,10 +103,12 @@ end
 -- @tparam bool fix_tune When true MIR is used to fine tune each sample to the nearest note.
 -- @tparam bool reset_groups If this value is greater than -1, the created groups will be a deep copy of this value's group slot instead of empty groups.
 -- @tparam bool map_velocity_range_names If true, then names will be mapped to values
+-- @tparam bool reset_zones If true, then zones in existing groups will be reset before adding zones.
 -- @treturn bool
-function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mode,sample_name_location,signal_name_location,articulation_location,round_robin_location,root_detect,root_location,key_confine,low_key_location,high_key_location,vel_confine,low_vel_location,high_vel_location,set_loop,loop_xfade,default_root_value,default_low_key_value,default_high_key_value,default_low_vel_value,default_high_vel_value,verbose_mode,fix_tune,reset_groups,map_velocity_range_names)
+function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mode,sample_name_location,signal_name_location,articulation_location,round_robin_location,root_detect,root_location,key_confine,low_key_location,high_key_location,vel_confine,low_vel_location,high_vel_location,set_loop,loop_xfade,default_root_value,default_low_key_value,default_high_key_value,default_low_vel_value,default_high_vel_value,verbose_mode,fix_tune,reset_groups,map_velocity_range_names,reset_zones)
 	if verbose_mode == nil then verbose_mode = true end
 	if reset_groups == nil then reset_groups = -1 end
+	if reset_zones == nil then reset_zones = false end
 
 	if verbose_mode then print("Group mode parameter set to: "..playback_mode) end
 	
@@ -185,6 +188,7 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 
 	-- Variable for the token values
 	local token_value
+	local remove_first_group = true
 
 	if verbose_mode then print("Number of sample paths found: " .. ctUtil.table_size(sample_paths_table)) end
 
@@ -197,13 +201,15 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	    if verbose_mode then print(dash_sep) end
 
 	    local num_tokens = ctUtil.table_size(sample_tokens_table[index])
-	    local is_closed_sample = sample_tokens_table[index][num_tokens-1]
-	    local is_open_sample = sample_tokens_table[index][num_tokens]
+	    local is_closed_sample = sample_tokens_table[index][num_tokens-2]
+	    local is_open_sample = sample_tokens_table[index][num_tokens-1]
+	    local no_accent_sample = sample_tokens_table[index][num_tokens]
 
 		-- Set the proposed group name based on the tokens.
 	    -- If there is a sample name token, add that to the proposed name.
 	    if sample_name_location > 0 then
 	        if sample_tokens_table[index][sample_name_location] ~= nil then
+	        	print(file)
 	            print("Sample name found: "..sample_tokens_table[index][sample_name_location])
 	            curent_group_name = sample_tokens_table[index][sample_name_location]
 	            -- Remove hyphens and spaces from group name to match existing convention
@@ -264,8 +270,15 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	    -- Initialize the zone variable.
 	    local z = Zone()
 
+	    -- Check if this group existed before running the mapping script
+	    local existing_group_index = ctGroups.find_group_index(curent_group_name)
+	    if existing_group_index > -1 and reset_zones then
+	    	-- Add a zone for each sample.
+	    	instrument.groups[existing_group_index].zones:add(z)
+	    	if verbose_mode then print("Group exists. Sample put in group #"..existing_group_index) end
+	    	remove_first_group = false
 	    -- If a group for this name exists, put the sample in that group. Otherwise create a group for that name.
-		if ctUtil.table_value_check(groups_list,curent_group_name) == true then
+		elseif ctUtil.table_value_check(groups_list,curent_group_name) == true then
 			local temp_group_index = ctUtil.table_value_index(groups_list,curent_group_name)
 		    -- Add a zone for each sample.
 	    	instrument.groups[temp_group_index].zones:add(z)
@@ -274,16 +287,17 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 			-- Initialize a new group.
             local g
             -- If told to copy a group, copy that one.
-            if reset_groups > -1 then 
+            if reset_groups > -1 and reset_zones == false then
                 instrument.groups:insert(x,instrument.groups[reset_groups])
 				g = instrument.groups[x]
+			-- If using existing groups with zones reset
             -- Create a new group.
             else
-                g = Group()
-                -- Set playback mode
-                g.playbackMode = playback_mode
-                -- Add the group to the instrument.
-                instrument.groups:add(g)
+            	g = Group()
+	            -- Set playback mode
+	            g.playbackMode = playback_mode
+	            -- Add the group to the instrument.
+	            instrument.groups:add(g)
             end
 
 			-- Add a zone for each sample.
@@ -399,8 +413,13 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	        elseif high_vel_location > 0 then
 				if sample_tokens_table[index][high_vel_location] then
 		            if map_velocity_range_names then
-						-- Map from token to number value
-						token_value = velocities[sample_tokens_table[index][high_vel_location]]['high']
+		            	-- If there is no accent sample, then set highest value for Hard sample to Accent value
+		            	if sample_tokens_table[index][high_vel_location] == 'Hard' and no_accent_sample then
+		            		token_value = velocities['Accent']['high']
+		            	else
+							-- Map from token to number value
+							token_value = velocities[sample_tokens_table[index][high_vel_location]]['high']
+						end
 					else
 						-- Remove non numerical characters from the token.
 		        		token_value = tonumber(sample_tokens_table[index][high_vel_location]:match('%d[%d.,]*'))
@@ -469,7 +488,7 @@ function CtMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mo
 	end
 
 	-- Fix wrong group indexing annoyance.
-	instrument.groups:remove(0)
+	if remove_first_group then instrument.groups:remove(0) end
 
 	return true
 end

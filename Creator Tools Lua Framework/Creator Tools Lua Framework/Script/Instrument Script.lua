@@ -82,6 +82,7 @@ local instrument_name_prefix = parameters_table[67]
 local reverse_token_order = ctUtil.tobool(parameters_table[68])
 local map_velocity_range_names = ctUtil.tobool(parameters_table[69])
 local re_order_groups = ctUtil.tobool(parameters_table[70])
+local reset_zones = ctUtil.tobool(parameters_table[71])
 
 local free_flag_bool_1 = false
 local free_flag_knob_1 = -1
@@ -133,7 +134,14 @@ if perform_mapping then
 			print("Instrument reset performed")
 			print(dash_sep)  
 		end
-	end	
+	end
+
+	if reset_zones then
+		for n=0, #instrument.groups-1 do
+			instrument.groups[n].zones:reset()
+		end
+		if verbose_mode then print("Zones reset for existing groups") end
+	end
 
 	-- Declare an array for the tokens.
 	local sample_tokens_table = {}
@@ -148,7 +156,7 @@ if perform_mapping then
 	end
 
 	-- Create the mapping
-	ctMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mode,sample_name_location,signal_name_location,articulation_location,round_robin_location,root_detect,root_location,key_confine,low_key_location,high_key_location,vel_confine,low_vel_location,high_vel_location,set_loop,loop_xfade,default_root_value,default_low_key_value,default_high_key_value,default_low_vel_value,default_high_vel_value,verbose_mode,fix_tune,reset_groups,map_velocity_range_names)
+	ctMap.create_mapping(sample_paths_table,sample_tokens_table,playback_mode,sample_name_location,signal_name_location,articulation_location,round_robin_location,root_detect,root_location,key_confine,low_key_location,high_key_location,vel_confine,low_vel_location,high_vel_location,set_loop,loop_xfade,default_root_value,default_low_key_value,default_high_key_value,default_low_vel_value,default_high_vel_value,verbose_mode,fix_tune,reset_groups,map_velocity_range_names,reset_zones)
 
 	if verbose_mode then
 		print(dash_sep)
