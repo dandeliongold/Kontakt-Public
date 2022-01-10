@@ -23,6 +23,17 @@ function set_knob_label_for_mic(knob, mic_index)
 	set_knob_label(knob, get_engine_par_disp($ENGINE_PAR_VOLUME,$group_index,-1,-1))
 end function
 
+function link_knobs(source_knob, dest_knob, dest_mic_index)
+	declare $group_index := 0
+	declare $count := 0
+	while ($count < $GROUPS_PER_MIC)
+		$group_index := $count + (dest_mic_index * $GROUPS_PER_MIC)
+		set_engine_par($ENGINE_PAR_VOLUME,source_knob,$group_index,-1,-1)
+		inc($count)
+	end while
+	set_knob_label_for_mic(dest_knob, dest_mic_index)
+end function
+
 on init
 	// BD_Combined: 6 groups per mic
 	// HH_Combined: 6 groups per mic
@@ -121,6 +132,8 @@ end on
 
 on ui_control ($OHSide)
 	link_groups_volume($OHSide, $OH_SIDE_INDEX)
+	// Side and Top should be linked
+	link_knobs($OHSide, $OHTop, $OH_TOP_INDEX)
 end on
 
 on ui_control ($OHFront)
@@ -129,6 +142,8 @@ end on
 
 on ui_control ($OHTop)
 	link_groups_volume($OHTop, $OH_TOP_INDEX)
+	// Side and Top should be linked
+	link_knobs($OHTop, $OHSide, $OH_SIDE_INDEX)
 end on
 
 on ui_control ($Center1)

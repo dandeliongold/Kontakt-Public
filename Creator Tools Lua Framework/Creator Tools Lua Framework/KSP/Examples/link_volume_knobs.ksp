@@ -2,16 +2,16 @@ on init
  declare ui_knob $Volume (0,1000000,1)
  set_knob_unit($Volume,$KNOB_UNIT_DB)
  set_knob_defval($Volume,630859)
- $Volume := _get_engine_par($ENGINE_PAR_VOLUME,-1,-1,-1)
- set_knob_label($Volume,_get_engine_par_disp($ENGINE_PAR_VOLUME,-1,-1,-1))
+ $Volume := get_engine_par($ENGINE_PAR_VOLUME,-1,-1,-1)
+ set_knob_label($Volume,get_engine_par_disp($ENGINE_PAR_VOLUME,-1,-1,-1))
 end on
 
 on ui_update
- $Volume := _get_engine_par($ENGINE_PAR_VOLUME,-1,-1,-1)
- set_knob_label($Volume,_get_engine_par_disp($ENGINE_PAR_VOLUME,-1,-1,-1))
+ $Volume := get_engine_par($ENGINE_PAR_VOLUME,-1,-1,-1)
+ set_knob_label($Volume,get_engine_par_disp($ENGINE_PAR_VOLUME,-1,-1,-1))
 end on
 
 on ui_control ($Volume)
- _set_engine_par($ENGINE_PAR_VOLUME,$Volume,-1,-1,-1)
- set_knob_label($Volume,_get_engine_par_disp($ENGINE_PAR_VOLUME,-1,-1,-1))
+ set_engine_par($ENGINE_PAR_VOLUME,$Volume,-1,-1,-1)
+ set_knob_label($Volume,get_engine_par_disp($ENGINE_PAR_VOLUME,-1,-1,-1))
 end on
