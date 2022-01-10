@@ -38,7 +38,7 @@ on init
 	// BD_Combined: 6 groups per mic
 	// HH_Combined: 6 groups per mic
 	// All other instruments: 3 groups per mic
-	declare const $GROUPS_PER_MIC := 3
+	declare const $GROUPS_PER_MIC := 6
 
 	declare const $KICK_BAT_INDEX := 0
 	declare const $KICK_IN_INDEX := 1
@@ -92,6 +92,26 @@ on init
 	declare pers ui_knob $Room (0,1000000,1)
 	initialize_knob($Room, $ROOM_INDEX)
 
+end on
+
+on ui_update
+	// Added to sync custom knobs with Amplifier volume knob
+	set_knob_label_for_mic($KickBat, $KICK_BAT_INDEX)
+	set_knob_label_for_mic($KickIn, $KICK_IN_INDEX)
+	set_knob_label_for_mic($KickOut, $KICK_OUT_INDEX)
+	set_knob_label_for_mic($SnareTop, $SNARE_TOP_INDEX)
+	set_knob_label_for_mic($SnareBottom, $SNARE_BOTTOM_INDEX)
+	set_knob_label_for_mic($HiHat, $HI_HAT_INDEX)
+	set_knob_label_for_mic($HiTom, $HIGH_TOM_INDEX)
+	set_knob_label_for_mic($MidTom, $MID_TOM_INDEX)
+	set_knob_label_for_mic($LowTom, $LOW_TOM_INDEX)
+	set_knob_label_for_mic($LowTom, $LOW_TOM_INDEX)
+	set_knob_label_for_mic($OHSide, $OH_SIDE_INDEX)
+	set_knob_label_for_mic($OHFront, $OH_FRONT_INDEX)
+	set_knob_label_for_mic($OHTop, $OH_TOP_INDEX)
+	set_knob_label_for_mic($Center1, $CENTER_1_INDEX)
+	set_knob_label_for_mic($Center2, $CENTER_2_INDEX)
+	set_knob_label_for_mic($Room, $ROOM_INDEX)
 end on
 
 on ui_control ($KickBat)
