@@ -1,0 +1,146 @@
+function initialize_knob(knob, mic_index)
+	set_knob_unit(knob,$KNOB_UNIT_DB)
+	set_knob_defval(knob,630000)
+	set_knob_label_for_mic(knob, mic_index)
+	watch_var(knob)
+	read_persistent_var(knob)
+end function
+
+function link_groups_volume(knob, mic_index)
+	declare $group_index := 0
+	declare $count := 0
+	while ($count < $GROUPS_PER_MIC)
+		$group_index := $count + (mic_index * $GROUPS_PER_MIC)
+		set_engine_par($ENGINE_PAR_VOLUME,knob,$group_index,-1,-1)
+		inc($count)
+	end while
+	set_knob_label_for_mic(knob, mic_index)
+end function
+
+function set_knob_label_for_mic(knob, mic_index)
+	declare $group_index := 0
+	$group_index := (mic_index * $GROUPS_PER_MIC)
+	set_knob_label(knob, get_engine_par_disp($ENGINE_PAR_VOLUME,$group_index,-1,-1))
+end function
+
+on init
+	// BD_Combined: 6 groups per mic
+	// HH_Combined: 6 groups per mic
+	// All other instruments: 3 groups per mic
+	declare const $GROUPS_PER_MIC := 3
+
+	declare const $KICK_BAT_INDEX := 0
+	declare const $KICK_IN_INDEX := 1
+	declare const $KICK_OUT_INDEX := 2
+	declare const $SNARE_TOP_INDEX := 3
+	declare const $SNARE_BOTTOM_INDEX := 4
+	declare const $HI_HAT_INDEX := 5
+	declare const $HIGH_TOM_INDEX := 6
+	declare const $MID_TOM_INDEX := 7
+	declare const $LOW_TOM_INDEX := 8
+	declare const $OH_SIDE_INDEX := 9
+	declare const $OH_FRONT_INDEX := 10
+	declare const $OH_TOP_INDEX := 11
+	declare const $CENTER_1_INDEX := 12
+	declare const $CENTER_2_INDEX := 13
+	declare const $ROOM_INDEX := 14
+
+	declare pers ui_knob $KickBat (0,1000000,1)
+	initialize_knob($KickBat, $KICK_BAT_INDEX)
+	declare pers ui_knob $KickIn (0,1000000,1)
+	initialize_knob($KickIn, $KICK_IN_INDEX)
+	declare pers ui_knob $KickOut (0,1000000,1)
+	initialize_knob($KickOut, $KICK_OUT_INDEX)
+
+	declare pers ui_knob $SnareTop (0,1000000,1)
+	initialize_knob($SnareTop, $SNARE_TOP_INDEX)
+	declare pers ui_knob $SnareBottom (0,1000000,1)
+	initialize_knob($SnareBottom, $SNARE_BOTTOM_INDEX)
+
+	declare pers ui_knob $HiHat (0,1000000,1)
+	initialize_knob($HiHat, $HI_HAT_INDEX)
+
+	declare pers ui_knob $HiTom (0,1000000,1)
+	initialize_knob($HiTom, $HIGH_TOM_INDEX)
+	declare pers ui_knob $MidTom (0,1000000,1)
+	initialize_knob($MidTom, $MID_TOM_INDEX)
+	declare pers ui_knob $LowTom (0,1000000,1)
+	initialize_knob($LowTom, $LOW_TOM_INDEX)
+
+	declare pers ui_knob $OHSide (0,1000000,1)
+	initialize_knob($OHSide, $OH_SIDE_INDEX)
+	declare pers ui_knob $OHFront (0,1000000,1)
+	initialize_knob($$OHFront, $OH_FRONT_INDEX)
+	declare pers ui_knob $OHTop (0,1000000,1)
+	initialize_knob($OHTop, $OH_TOP_INDEX)
+
+	declare pers ui_knob $Center1 (0,1000000,1)
+	initialize_knob($Center1, $CENTER_1_INDEX)
+	declare pers ui_knob $Center2 (0,1000000,1)
+	initialize_knob($Center2, $CENTER_2_INDEX)
+	declare pers ui_knob $Room (0,1000000,1)
+	initialize_knob($Room, $ROOM_INDEX)
+
+end on
+
+on ui_control ($KickBat)
+	link_groups_volume($KickBat, $KICK_BAT_INDEX)
+end on
+
+on ui_control ($KickIn)
+	link_groups_volume($KickIn, $KICK_IN_INDEX)
+end on
+
+on ui_control ($KickOut)
+	link_groups_volume($KickOut, $KICK_OUT_INDEX)
+end on
+
+on ui_control ($SnareTop)
+	link_groups_volume($SnareTop, $SNARE_TOP_INDEX)
+end on
+
+on ui_control ($SnareBottom)
+	link_groups_volume($SnareBottom, $SNARE_BOTTOM_INDEX)
+end on
+
+on ui_control ($HiHat)
+	link_groups_volume($HiHat, $HI_HAT_INDEX)
+end on
+
+on ui_control ($HiTom)
+	link_groups_volume($HiTom, $HIGH_TOM_INDEX)
+end on
+
+on ui_control ($MidTom)
+	link_groups_volume($MidTom, $MID_TOM_INDEX)
+end on
+
+on ui_control ($LowTom)
+	link_groups_volume($LowTom, $LOW_TOM_INDEX)
+end on
+
+on ui_control ($OHSide)
+	link_groups_volume($OHSide, $OH_SIDE_INDEX)
+end on
+
+on ui_control ($OHFront)
+	link_groups_volume($OHFront, $OH_FRONT_INDEX)
+end on
+
+on ui_control ($OHTop)
+	link_groups_volume($OHTop, $OH_TOP_INDEX)
+end on
+
+on ui_control ($Center1)
+	link_groups_volume($Center1, $CENTER_1_INDEX)
+end on
+
+on ui_control ($Center2)
+	link_groups_volume($Center2, $CENTER_2_INDEX)
+end on
+
+on ui_control ($Room)
+	link_groups_volume($Room, $ROOM_INDEX)
+end on
+
+
