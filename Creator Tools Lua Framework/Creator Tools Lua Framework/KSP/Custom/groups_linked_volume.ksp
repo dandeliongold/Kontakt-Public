@@ -1,5 +1,6 @@
 function initialize_knob(knob, mic_index)
 	set_knob_unit(knob,$KNOB_UNIT_DB)
+	knob := 630000
 	set_knob_defval(knob,630000)
 	set_knob_label_for_mic(knob, mic_index)
 	watch_var(knob)
@@ -34,11 +35,17 @@ function link_knobs(source_knob, dest_knob, dest_mic_index)
 	set_knob_label_for_mic(dest_knob, dest_mic_index)
 end function
 
+function set_tune()
+	$semitone := 500000 + ($Pitch*13888)
+	set_engine_par($ENGINE_PAR_TUNE,$semitone,-1,-1,-1)
+end function
+
 on init
+	// Group volume controls
 	// BD_Combined: 6 groups per mic
 	// HH_Combined: 6 groups per mic
 	// All other instruments: 3 groups per mic
-	declare const $GROUPS_PER_MIC := 6
+	declare const $GROUPS_PER_MIC := 3
 
 	declare const $KICK_BAT_INDEX := 0
 	declare const $KICK_IN_INDEX := 1
@@ -92,6 +99,28 @@ on init
 	declare pers ui_knob $Room (0,1000000,1)
 	initialize_knob($Room, $ROOM_INDEX)
 
+	// Decay modulation control
+	// Note: Each modulator for each group needs to have the same name
+	declare $count
+ 	declare $env_idx
+	declare @MOD_ENV_DECAY_NAME
+	@MOD_ENV_DECAY_NAME := "ENV_AHDSR"
+	declare pers ui_knob $Decay (0,1000000,1)
+	$Decay := 3000
+ 	set_knob_unit($Decay,$KNOB_UNIT_MS)
+ 	$env_idx := find_mod(0,@MOD_ENV_DECAY_NAME)
+ 	$Decay := get_engine_par($ENGINE_PAR_DECAY,0,$env_idx,-1)
+ 	set_knob_label($Decay,get_engine_par_disp($ENGINE_PAR_DECAY,0,$env_idx,-1))
+
+ 	// Instrument-level pitch control
+ 	declare $semitone
+	declare pers ui_knob $Pitch (-36,36,1)
+	$Pitch := 0
+ 	set_knob_unit($Pitch,$KNOB_UNIT_ST)
+ 	set_knob_defval ($Pitch,0)
+ 	$Pitch := get_engine_par($ENGINE_PAR_TUNE,-1,-1,-1)
+ 	set_knob_label($Pitch,get_engine_par_disp($ENGINE_PAR_TUNE,-1,-1,-1))
+
 end on
 
 on ui_update
@@ -112,6 +141,9 @@ on ui_update
 	set_knob_label_for_mic($Center1, $CENTER_1_INDEX)
 	set_knob_label_for_mic($Center2, $CENTER_2_INDEX)
 	set_knob_label_for_mic($Room, $ROOM_INDEX)
+	// Same for other modulation
+	set_knob_label($Decay,get_engine_par_disp($ENGINE_PAR_DECAY,0,find_mod(0,@MOD_ENV_DECAY_NAME),-1))
+	set_knob_label($Pitch,get_engine_par_disp($ENGINE_PAR_TUNE,-1,-1,-1))
 end on
 
 on ui_control ($KickBat)
@@ -178,4 +210,17 @@ on ui_control ($Room)
 	link_groups_volume($Room, $ROOM_INDEX)
 end on
 
+on ui_control ($Decay)
+    $count := 0
+    while($count < $NUM_GROUPS)
+        $env_idx := find_mod($count,@MOD_ENV_DECAY_NAME)
+        set_engine_par($ENGINE_PAR_DECAY,$Decay,$count,$env_idx,-1)
+        set_knob_label($Decay,get_engine_par_disp($ENGINE_PAR_DECAY,$count,$env_idx,-1))
+        inc($count)
+    end while
+end on
 
+on ui_control ($Pitch)
+    set_tune()
+    set_knob_label(Pitch,get_engine_par_disp($ENGINE_PAR_TUNE,-1,-1,-1))
+end on

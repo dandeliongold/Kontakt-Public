@@ -1,0 +1,21 @@
+on init
+    declare ui_label $label_mods (1,6)
+    set_text ($$label_mods,"Groups with incorrect mod settings:")
+
+    declare $count
+    declare $env_idx
+    declare $mod_target
+    $count := 0
+    while($count < $NUM_GROUPS)
+        $env_idx := find_mod($count,"ENV_AHDSR")
+        if $env_idx # 0
+            add_text_line ($label_mods, $count & ": NO ENV_AHDSR")
+        else
+            $mod_target := find_target($count, $env_idx, "ENV_AHDSR_VOLUME")
+            if $mod_target # 0
+                add_text_line ($label_mods, $count & ": NO ENV_AHDSR_VOLUME")
+            end if
+        end if
+        inc($count)
+    end while
+end on
