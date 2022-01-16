@@ -5,6 +5,8 @@ on init
     declare $count
     declare $env_idx
     declare $mod_target
+    declare $env_value
+    declare @env_disp_value
     $count := 0
     while($count < $NUM_GROUPS)
         $env_idx := find_mod($count,"ENV_AHDSR")
@@ -14,6 +16,12 @@ on init
             $mod_target := find_target($count, $env_idx, "ENV_AHDSR_VOLUME")
             if $mod_target # 0
                 add_text_line ($label_mods, $count & ": NO ENV_AHDSR_VOLUME")
+            else
+                $env_value := get_engine_par($ENGINE_PAR_DECAY,$count,$env_idx,-1)
+                if $env_value # 775305
+                    @env_disp_value := get_engine_par_disp($ENGINE_PAR_DECAY,$count,$env_idx,-1)
+                    add_text_line ($label_mods, $count & ": " & @env_disp_value)
+                end if
             end if
         end if
         inc($count)
