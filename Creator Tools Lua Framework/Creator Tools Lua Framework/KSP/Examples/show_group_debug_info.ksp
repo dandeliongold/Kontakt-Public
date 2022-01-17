@@ -3,25 +3,49 @@ on init
     set_text ($$label_mods,"Groups with incorrect mod settings:")
 
     declare $count
+    declare $group_number
     declare $env_idx
     declare $mod_target
     declare $env_value
     declare @env_disp_value
     $count := 0
     while($count < $NUM_GROUPS)
+        $group_number := ($count + 1)
         $env_idx := find_mod($count,"ENV_AHDSR")
         if $env_idx # 0
-            add_text_line ($label_mods, $count & ": NO ENV_AHDSR")
+            add_text_line ($label_mods, $group_number & ": NO ENV_AHDSR")
         else
             $mod_target := find_target($count, $env_idx, "ENV_AHDSR_VOLUME")
             if $mod_target # 0
-                add_text_line ($label_mods, $count & ": NO ENV_AHDSR_VOLUME")
+                add_text_line ($label_mods, $group_number & ": NO ENV_AHDSR_VOLUME")
             else
+                // Decay
                 $env_value := get_engine_par($ENGINE_PAR_DECAY,$count,$env_idx,-1)
                 if $env_value # 775305
                     set_engine_par($ENGINE_PAR_DECAY,775305,$count,$env_idx,-1)
                     @env_disp_value := get_engine_par_disp($ENGINE_PAR_DECAY,$count,$env_idx,-1)
-                    add_text_line ($label_mods, $count & ": " & @env_disp_value)
+                    add_text_line ($label_mods, $group_number & ": decay reset to " & @env_disp_value)
+                end if
+                // Attack
+                $env_value := get_engine_par($ENGINE_PAR_ATTACK,$count,$env_idx,-1)
+                if $env_value # 0
+                    set_engine_par($ENGINE_PAR_ATTACK,0,$count,$env_idx,-1)
+                    @env_disp_value := get_engine_par_disp($ENGINE_PAR_ATTACK,$count,$env_idx,-1)
+                    add_text_line ($label_mods, $group_number & ": attack reset to " & @env_disp_value)
+                end if
+                // Hold
+                $env_value := get_engine_par($ENGINE_PAR_HOLD,$count,$env_idx,-1)
+                if $env_value # 0
+                    set_engine_par($ENGINE_PAR_HOLD,0,$count,$env_idx,-1)
+                    @env_disp_value := get_engine_par_disp($ENGINE_PAR_HOLD,$count,$env_idx,-1)
+                    add_text_line ($label_mods, $group_number & ": hold reset to " & @env_disp_value)
+                end if
+                // AHD Mode
+                $env_value := get_engine_par($ENGINE_PAR_ENV_AHD,$count,$env_idx,-1)
+                if $env_value # 1
+                    set_engine_par($ENGINE_PAR_ENV_AHD,1,$count,$env_idx,-1)
+                    @env_disp_value := get_engine_par_disp($ENGINE_PAR_ENV_AHD,$count,$env_idx,-1)
+                    add_text_line ($label_mods, $group_number & ": AHD reset to " & @env_disp_value)
                 end if
             end if
         end if
