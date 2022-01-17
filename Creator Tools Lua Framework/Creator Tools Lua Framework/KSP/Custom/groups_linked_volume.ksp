@@ -35,11 +35,6 @@ function link_knobs(source_knob, dest_knob, dest_mic_index)
 	set_knob_label_for_mic(dest_knob, dest_mic_index)
 end function
 
-function set_tune()
-	$semitone := 500000 + ($Pitch*13888)
-	set_engine_par($ENGINE_PAR_TUNE,$semitone,-1,-1,-1)
-end function
-
 on init
 	// Group volume controls
 	// BD_Combined: 6 groups per mic
@@ -112,7 +107,10 @@ on init
  	$Decay := get_engine_par($ENGINE_PAR_DECAY,0,$env_idx,-1)
  	set_knob_label($Decay,get_engine_par_disp($ENGINE_PAR_DECAY,0,$env_idx,-1))
 
+ 	
+ 	{
  	// Instrument-level pitch control
+ 	// Not needed because there's already an instrument-level tune
  	declare $semitone
 	declare pers ui_knob $Pitch (-36,36,1)
 	$Pitch := 0
@@ -120,6 +118,7 @@ on init
  	set_knob_defval ($Pitch,0)
  	$Pitch := get_engine_par($ENGINE_PAR_TUNE,-1,-1,-1)
  	set_knob_label($Pitch,get_engine_par_disp($ENGINE_PAR_TUNE,-1,-1,-1))
+ 	}
 
 end on
 
@@ -143,7 +142,11 @@ on ui_update
 	set_knob_label_for_mic($Room, $ROOM_INDEX)
 	// Same for other modulation
 	set_knob_label($Decay,get_engine_par_disp($ENGINE_PAR_DECAY,0,find_mod(0,@MOD_ENV_DECAY_NAME),-1))
+	{
+ 	// Instrument-level pitch control
+ 	// Not needed because there's already an instrument-level tune
 	set_knob_label($Pitch,get_engine_par_disp($ENGINE_PAR_TUNE,-1,-1,-1))
+	}
 end on
 
 on ui_control ($KickBat)
@@ -220,7 +223,12 @@ on ui_control ($Decay)
     end while
 end on
 
+{
+ 	// Instrument-level pitch control
+ 	// Not needed because there's already an instrument-level tune
 on ui_control ($Pitch)
-    set_tune()
+    $semitone := 500000 + ($Pitch*13888)
+	set_engine_par($ENGINE_PAR_TUNE,$semitone,-1,-1,-1)
     set_knob_label(Pitch,get_engine_par_disp($ENGINE_PAR_TUNE,-1,-1,-1))
 end on
+}

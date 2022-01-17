@@ -19,6 +19,7 @@ on init
             else
                 $env_value := get_engine_par($ENGINE_PAR_DECAY,$count,$env_idx,-1)
                 if $env_value # 775305
+                    set_engine_par($ENGINE_PAR_DECAY,775305,$count,$env_idx,-1)
                     @env_disp_value := get_engine_par_disp($ENGINE_PAR_DECAY,$count,$env_idx,-1)
                     add_text_line ($label_mods, $count & ": " & @env_disp_value)
                 end if
